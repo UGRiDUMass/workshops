@@ -1,0 +1,168 @@
+---
+title: "Interactive Graphs in R using plotly and ggplot2"
+author: "Evan Moore"
+date: "February 11th, 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+## Introduction
+
+- It's easy to make interesting and interactive plots in R using packages like `plotly` and `ggplot2`!
+- For these examples, we will be using the `diamonds` dataset that comes preloaded with ggplot. 
+- View the data dictionary [here](http://ggplot2.tidyverse.org/reference/diamonds.html).
+
+## Getting Started
+
+First, let's load up our required packages and data. 
+```{r}
+library(ggplot2) #for plotting
+library(dplyr) #for data manipulation
+library(plotly) #for interactivity
+data(diamonds)
+```
+
+## Diamonds 
+
+What variables are included in the `diamond` dataset, and what are their types? Getting a good sense of the variables included in your data is the first step to making great visualizations! 
+```{r}
+glimpse(diamonds)
+```
+
+## Initial Graphing Ideas
+
+Let's try a scatter plot between carat and price, adding in a smoothed regression line to help us see the relationship between these variables. `ggplot2` makes it very easy to "stack" aethetic layers in this way.
+```{r}
+diamonds <- diamonds[sample(nrow(diamonds), 5000), ]
+p <- ggplot(diamonds, aes(x = carat, y = price)) + 
+  geom_point() + 
+  geom_smooth()
+```
+
+## The Plot
+
+Let's check out the plot we just created. 
+```{r, echo = F}
+p
+```
+
+## Expanding on our Aesthetics
+
+The plot looks nice, but seems to be missing something...color! Notice how easy it is to add an additional parameter to the plot we just created. 
+```{r}
+p2 <- p + aes(col = color)
+```
+
+## Graphing with Color
+
+Looks much better now. However, the color argument has the additional effect of creating unique regression lines for each color, making the plot more cluttered and hard to interpret as a result.
+```{r, echo = F}
+p2
+```
+
+## Plotly to the Rescue
+
+Here's where `plotly` comes in! The `ggplotly()` function can be applied to (almost) any `ggplot2` object in order to make it interactive, with additional features like toggling which data to show and ability to zoom in and hover on specific data points.
+
+## Interactive ggplot 1
+```{r}
+ggplotly(p2)
+```
+
+## GGplot 
+
+Attempting to make similar graphs in ggplot requires extra effort, without the added customizability. 
+```{r}
+p <- diamonds %>% 
+  filter(color == "D" | color == "J") %>% 
+  ggplot(aes(x = carat, y = price, col = color)) + 
+  geom_point() + 
+  geom_smooth()
+```
+
+## ggplot Attempt
+```{r, echo = F}
+p
+```
+
+## More Plotly Examples
+
+We can try a similar plot to before, adding in an additional variable to facet by as well as changing the type of the regression line from smoothed to linear. 
+```{r}
+p<- ggplot(diamonds, aes(x =carat, y = price, col = color)) + 
+           geom_point() + 
+           geom_smooth(method="lm") + 
+           facet_grid(~clarity)
+```
+
+## Interactive ggplot 2
+```{r, echo = F}
+ggplotly(p)
+```
+
+## Interactive ggplot 3
+Let's try the same plot, but swap what we are faceting and coloring by.
+```{r, echo = F}
+ggplotly(ggplot(diamonds, aes(x =carat, y = price, col = clarity)) + 
+    geom_point() + 
+    geom_smooth(method="lm") + 
+    facet_grid(~color))
+```
+
+## Plotly Graphing
+`plotly` also offers many options for creating graphs through their own syntax. Check out [Plotly's website](https://plot.ly/r/) to see the full list of options (as well as code for each). The syntax is generally simple! For example, let's try making a heatmap.
+```{r}
+p <- plot_ly(data = diamonds, 
+    x = ~cut, 
+    y = ~color, 
+    z = ~price, 
+    type="heatmap")
+```
+
+## Heatmap
+```{r, echo = F}
+p
+```
+
+## More Options
+Another fun and easy option is the 3d scatterplot. Be aware, however, that it can be easy to create ugly or nonsenseical graphs in such a way, especially in 3 dimensions...
+```{r}
+#bad example
+p <- plot_ly(data = diamonds, 
+    x = ~cut, 
+    y = ~color, 
+    z = ~price, 
+    type="scatter3d")
+```
+
+## (Bad) 3D Scatterplot
+```{r, echo = F}
+p
+```
+
+## (Slightly Better) 3D Scatterplot
+```{r,echo = F}
+plot_ly(data = diamonds, x = ~carat, y = ~color, z = ~price, color = ~clarity, type = "scatter3d")
+```
+
+## ggplot-like Graphs
+Plotly can also do graphs similar to ggplot's style, with the added benefit of offering customizable hover-text and other interactivity options. Check this out! 
+```{r}
+p <- plot_ly(
+  diamonds, x = ~carat, y = ~price,
+  # Hover text:
+  text = ~paste("Price: ", price, '$<br>Cut:', cut),
+  color = ~carat, size = ~carat
+)
+```
+
+## Plotly 2D scatter plot
+```{r, echo =F}
+p
+```
+
+## Conclusion
+We've only scratched the surface of the possibilities `plotly` offers in R, but we hope you enjoyed learned about the basics of the packages, as well as its easy integrability with standard R plotting libraries `ggplot2`. 
